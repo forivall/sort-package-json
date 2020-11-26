@@ -320,13 +320,13 @@ const partition = (array, predicate) =>
     },
     [[], []],
   )
+const getOrCreateArray = (obj, key) => obj[key] || (obj[key] = [])
 const removeAndGatherComments = (keys, predicate) =>
   keys.reduceRight(
     (result, key) => {
-      const prev = result[0][0]
       ;(predicate(key)
-        ? prev
-          ? result[1][prev] || (result[1][prev] = [])
+        ? result.length > 0
+          ? getOrCreateArray(result[1], result[0][0])
           : result[2]
         : result[0]
       ).unshift(key)
