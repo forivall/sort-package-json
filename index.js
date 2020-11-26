@@ -320,13 +320,21 @@ const partition = (array, predicate) =>
     },
     [[], []],
   )
+class ArrayMap extends Map {
+  get(key) {
+    let arr = super.get(key)
+    if (!arr) {
+      this.set(key, (arr = []))
+    }
+    return arr
+  }
+}
 const removeAndGatherComments = (keys, predicate) =>
   keys.reduceRight(
     (result, key) => {
-      const prev = result[0][0]
       ;(predicate(key)
-        ? prev
-          ? result[1][prev] || (result[1][prev] = [])
+        ? result[0].length > 0
+          ? result[1].get(result[0][0])
           : result[2]
         : result[0]
       ).unshift(key)
@@ -335,7 +343,7 @@ const removeAndGatherComments = (keys, predicate) =>
     // 0: non-comment keys
     // 1: comments that precede a key
     // 2: trailing comments
-    [[], {}, []],
+    [[], new ArrayMap(), []],
   )
 function sortPackageJson(jsonIsh, options = {}) {
   return editStringJSON(
@@ -360,9 +368,9 @@ function sortPackageJson(jsonIsh, options = {}) {
         if (allKeys.length !== keys.length) {
           // re-add comment keys
           for (let i = sortOrder.length - 1; i >= 0; i--) {
-            const c = comments[sortOrder[i]]
-            if (c) {
-              sortOrder.splice(i, 0, ...c)
+            const k = sortOrder[i]
+            if (comments.has(k)) {
+              sortOrder.splice(i, 0, ...comments.get(k))
             }
           }
         }
